@@ -46,18 +46,16 @@ class App {
         }
     }
 
-    // 刷新数据
+    // 刷新数据：只重新读取最近一次已发布口径，不生成新快照、不改写历史结论
     refresh() {
-        window.toast.info('刷新中', '正在重新加载数据...');
-        
+        window.toast.info('刷新中', '正在按最近一次口径重新加载数据...');
+
         setTimeout(() => {
-            window.componentRenderer.renderStats();
-            window.componentRenderer.renderMatrix();
-            window.componentRenderer.renderQuickWins();
-            window.chartManager.resize();
-            
-            window.toast.success('刷新完成', '数据已更新');
-        }, 1000);
+            window.componentRenderer.renderAll();
+            window.chartManager.updateCharts();
+
+            window.toast.success('刷新完成', '沿用最近一次设定，历史结论保持不变');
+        }, 600);
     }
 
     // 导出报告

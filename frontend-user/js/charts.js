@@ -7,14 +7,22 @@ class ChartManager {
         this.charts = {};
     }
 
-    // 初始化漏斗图
     initFunnelChart(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
         const chart = echarts.init(container);
         this.charts.funnel = chart;
+        this.setFunnelOption(chart);
 
+        chart.on('click', (params) => {
+            window.toast.info('漏斗分析', `${params.name}: ${params.value}%`);
+        });
+
+        return chart;
+    }
+
+    setFunnelOption(chart) {
         const option = {
             backgroundColor: 'transparent',
             tooltip: {
@@ -70,33 +78,68 @@ class ChartManager {
             }]
         };
 
-        chart.setOption(option);
-        
-        // 点击事件
-        chart.on('click', (params) => {
-            window.toast.info('漏斗分析', `${params.name}: 转化率 ${params.value}%`);
-        });
-
-        return chart;
+        chart.setOption(option, true);
     }
 
-    // 初始化雷达图
     initRadarChart(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
         const chart = echarts.init(container);
         this.charts.radar = chart;
+        this.setRadarOption(chart);
+
+        chart.on('click', (params) => {
+            if (params.name) {
+                window.toast.info('能力对比', `${params.seriesName}: ${params.name}`);
+            }
+        });
+
+        return chart;
+    }
+
+    getRadarSeries() {
+        const evaluation = window.diagnosticEngine.evaluation;
+        const keys = matrixData.dimensions.map(dim => dim.key);
+        const current = keys.map(key => evaluation.dimensions[key].phases.phase1.actual);
+        const phase1Line = keys.map(key => evaluation.dimensions[key].phases.phase1.benchmark);
+        const phase2Target = keys.map(key => evaluation.dimensions[key].phases.phase2.benchmark);
+
+        return [
+            {
+                name: '佳贝艾特阶段1现状',
+                value: current,
+                color: '#ef4444',
+                areaColor: 'rgba(239, 68, 68, 0.28)'
+            },
+            {
+                name: '阶段1达标标杆',
+                value: phase1Line,
+                color: '#f59e0b',
+                areaColor: 'rgba(245, 158, 11, 0.08)'
+            },
+            {
+                name: '阶段2目标标杆',
+                value: phase2Target,
+                color: '#10b981',
+                areaColor: 'rgba(16, 185, 129, 0.12)'
+            }
+        ];
+    }
+
+    setRadarOption(chart) {
+        const indicators = matrixData.dimensions.map(dim => ({ name: dim.name, max: 100 }));
+        const series = this.getRadarSeries();
 
         const option = {
             backgroundColor: 'transparent',
             legend: {
-                data: radarData.series.map(s => s.name),
+                data: series.map(s => s.name),
                 bottom: 0,
-                textStyle: { color: '#94a3b8', fontSize: 12 },
-                itemWidth: 16,
-                itemHeight: 10,
-                itemGap: 20
+                textStyle: { color: '#94a3b8', fontSize: 11 },
+                itemWidth: 14,
+                itemHeight: 9,
+                itemGap: 12
             },
             tooltip: {
                 trigger: 'item',
@@ -107,13 +150,13 @@ class ChartManager {
                 extraCssText: 'backdrop-filter: blur(10px); border-radius: 8px;'
             },
             radar: {
-                indicator: radarData.indicators,
+                indicator: indicators,
                 shape: 'polygon',
                 splitNumber: 4,
-                center: ['50%', '48%'],
-                radius: '65%',
+                center: ['50%', '47%'],
+                radius: '62%',
                 axisName: {
-                    color: '#94a3b8',
+                    color: '#cbd5e1',
                     fontSize: 12,
                     fontWeight: 500
                 },
@@ -136,11 +179,11 @@ class ChartManager {
             },
             series: [{
                 type: 'radar',
-                data: radarData.series.map(s => ({
+                data: series.map(s => ({
                     value: s.value,
                     name: s.name,
                     symbol: 'circle',
-                    symbolSize: 8,
+                    symbolSize: 7,
                     lineStyle: {
                         color: s.color,
                         width: 2,
@@ -157,19 +200,15 @@ class ChartManager {
             }]
         };
 
-        chart.setOption(option);
-
-        // 点击事件
-        chart.on('click', (params) => {
-            if (params.name) {
-                window.toast.info('能力对比', `${params.seriesName}: ${params.name}`);
-            }
-        });
-
-        return chart;
+        chart.setOption(option, true);
     }
 
-    // 响应式调整
+    updateCharts() {
+        if (this.charts.funnel) this.setFunnelOption(this.charts.funnel);
+        if (this.charts.radar) this.setRadarOption(this.charts.radar);
+        this.resize();
+    }
+
     resize() {
         Object.values(this.charts).forEach(chart => {
             if (chart && chart.resize) {
@@ -178,7 +217,6 @@ class ChartManager {
         });
     }
 
-    // 销毁图表
     dispose() {
         Object.values(this.charts).forEach(chart => {
             if (chart && chart.dispose) {
@@ -189,5 +227,4 @@ class ChartManager {
     }
 }
 
-// 创建全局实例
 window.chartManager = new ChartManager();
