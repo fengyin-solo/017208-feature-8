@@ -1,5 +1,5 @@
 /* ========================================
-   图表组件
+   图表组件（数据全部来自 Diagnosis 引擎结果）
    ======================================== */
 
 class ChartManager {
@@ -71,8 +71,7 @@ class ChartManager {
         };
 
         chart.setOption(option);
-        
-        // 点击事件
+
         chart.on('click', (params) => {
             window.toast.info('漏斗分析', `${params.name}: 转化率 ${params.value}%`);
         });
@@ -80,7 +79,7 @@ class ChartManager {
         return chart;
     }
 
-    // 初始化雷达图
+    // 初始化雷达图：现状（引擎）/ 阶段2目标标杆 / 阶段3行业标杆，三者同源
     initRadarChart(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -88,15 +87,50 @@ class ChartManager {
         const chart = echarts.init(container);
         this.charts.radar = chart;
 
+        const result = window.Diagnosis.get();
+        const dims = result.dims;
+
+        const indicators = dims.map(d => ({ name: d.name, max: 100 }));
+
+        const seriesData = [
+            {
+                value: dims.map(d => d.score),
+                name: '佳贝艾特现状',
+                symbol: 'circle',
+                symbolSize: 8,
+                lineStyle: { color: '#ef4444', width: 2, shadowBlur: 10, shadowColor: '#ef4444' },
+                areaStyle: { color: 'rgba(239, 68, 68, 0.25)' },
+                itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 }
+            },
+            {
+                value: dims.map(d => d.cells.phase2.benchmark),
+                name: '阶段2 目标标杆',
+                symbol: 'diamond',
+                symbolSize: 7,
+                lineStyle: { color: '#eab308', width: 2, type: 'dashed' },
+                areaStyle: { color: 'rgba(234, 179, 8, 0.06)' },
+                itemStyle: { color: '#eab308' }
+            },
+            {
+                value: dims.map(d => d.cells.phase3.benchmark),
+                name: '阶段3 行业标杆',
+                symbol: 'circle',
+                symbolSize: 6,
+                lineStyle: { color: '#10b981', width: 2, shadowBlur: 10, shadowColor: '#10b981' },
+                areaStyle: { color: 'rgba(16, 185, 129, 0.15)' },
+                itemStyle: { color: '#10b981', borderColor: '#fff', borderWidth: 2 }
+            }
+        ];
+
         const option = {
             backgroundColor: 'transparent',
             legend: {
-                data: radarData.series.map(s => s.name),
+                data: seriesData.map(s => s.name),
                 bottom: 0,
                 textStyle: { color: '#94a3b8', fontSize: 12 },
                 itemWidth: 16,
                 itemHeight: 10,
-                itemGap: 20
+                itemGap: 16
             },
             tooltip: {
                 trigger: 'item',
@@ -104,14 +138,14 @@ class ChartManager {
                 borderColor: 'rgba(168, 85, 247, 0.3)',
                 borderWidth: 1,
                 textStyle: { color: '#f8fafc' },
-                extraCssText: 'backdrop-filter: blur(10px); border-radius: 8px;'
+                extraCssText: 'backdrop-filter: blur(10px); border-radius: 8px; max-width: 320px;'
             },
             radar: {
-                indicator: radarData.indicators,
+                indicator: indicators,
                 shape: 'polygon',
                 splitNumber: 4,
                 center: ['50%', '48%'],
-                radius: '65%',
+                radius: '62%',
                 axisName: {
                     color: '#94a3b8',
                     fontSize: 12,
@@ -134,39 +168,35 @@ class ChartManager {
                     }
                 }
             },
-            series: [{
-                type: 'radar',
-                data: radarData.series.map(s => ({
-                    value: s.value,
-                    name: s.name,
-                    symbol: 'circle',
-                    symbolSize: 8,
-                    lineStyle: {
-                        color: s.color,
-                        width: 2,
-                        shadowBlur: 10,
-                        shadowColor: s.color
-                    },
-                    areaStyle: { color: s.areaColor },
-                    itemStyle: {
-                        color: s.color,
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }
-                }))
-            }]
+            series: [{ type: 'radar', data: seriesData }]
         };
 
         chart.setOption(option);
 
-        // 点击事件
+        // 点击维度名称时展示与矩阵/侧栏完全一致的判定档
         chart.on('click', (params) => {
-            if (params.name) {
-                window.toast.info('能力对比', `${params.seriesName}: ${params.name}`);
+            const name = params.name;
+            const dim = dims.find(d => d.name === name);
+            if (dim) {
+                const cell = dim.cells[TARGET_PHASE_KEY];
+                const band = window.Diagnosis.BANDS[cell.band];
+                window.toast.info(
+                    `${dim.icon} ${dim.name} · ${band.label}`,
+                    `现状 ${dim.score} 分 vs 阶段2标杆 ${cell.benchmark} 分（差距 ${cell.gap} 分）`,
+                    3500
+                );
             }
         });
 
         return chart;
+    }
+
+    // 按引擎最新结果重绘图表
+    refresh() {
+        Object.values(this.charts).forEach(chart => chart && chart.dispose && chart.dispose());
+        this.charts = {};
+        this.initFunnelChart('funnelChart');
+        this.initRadarChart('radarChart');
     }
 
     // 响应式调整

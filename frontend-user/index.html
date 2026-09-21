@@ -6,13 +6,13 @@
     <meta name="description" content="佳贝艾特会员体系与私域运营全景诊断驾驶舱 - 2026战略诊断报告">
     <meta name="theme-color" content="#0a0a0f">
     <title>佳贝艾特 - 会员体系与私域运营全景诊断驾驶舱</title>
-    
+
     <!-- 预加载关键资源 -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    
+
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    
+
     <!-- 样式文件 -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
@@ -35,7 +35,7 @@
         <div class="sidebar-body" id="sidebarBody">
         </div>
         <div class="sidebar-footer">
-            <span class="sidebar-footer-hint">点击断层卡片跳转详情</span>
+            <span class="sidebar-footer-hint">点击断层卡片跳转矩阵详情</span>
         </div>
     </aside>
 
@@ -43,10 +43,10 @@
     <div class="bg-animation"></div>
     <div class="grid-overlay"></div>
     <div class="particles"></div>
-    
+
     <!-- 主容器 -->
     <div class="container" id="app">
-        
+
         <!-- 头部区域 -->
         <header class="header">
             <div class="header-badge">
@@ -58,14 +58,27 @@
                 <span class="typewriter-text" id="typewriter"></span>
             </div>
         </header>
-        
+
+        <!-- 判定口径工具栏 -->
+        <div class="caliber-toolbar glass-card">
+            <div class="caliber-status" id="caliberStatus"></div>
+            <div class="caliber-actions-bar">
+                <button class="btn btn-secondary caliber-toolbar-btn" id="caliberBtn">🧭 判定口径</button>
+                <button class="btn btn-secondary caliber-toolbar-btn" id="rulesBtn">📏 规则与自检</button>
+                <button class="btn btn-secondary caliber-toolbar-btn" id="historyBtn">🗃️ 历史结论</button>
+            </div>
+        </div>
+
+        <!-- 口径调整差异提示 -->
+        <div class="delta-banner" id="deltaBanner" hidden></div>
+
         <!-- 统计卡片区域 -->
         <section class="stats-section">
             <div class="stats-grid" id="statsGrid">
                 <!-- 由 JS 动态渲染 -->
             </div>
         </section>
-        
+
         <!-- 图表区域 -->
         <section class="charts-section">
             <div class="glass-card chart-card">
@@ -74,16 +87,17 @@
                     AARRR 漏斗分析 - 当前转化瓶颈
                 </div>
                 <div class="chart-container" id="funnelChart"></div>
+                <div class="chart-evidence" id="funnelEvidence"></div>
             </div>
             <div class="glass-card chart-card">
                 <div class="chart-title">
                     <span class="chart-title-icon">🎯</span>
-                    会员运营能力雷达图 - 现状 vs 标杆
+                    会员运营能力雷达图 - 现状 vs 阶段2/阶段3标杆
                 </div>
                 <div class="chart-container" id="radarChart"></div>
             </div>
         </section>
-        
+
         <!-- 战略矩阵区域 -->
         <section class="matrix-section">
             <h2 class="section-title">
@@ -91,6 +105,15 @@
                 会员战略全景矩阵
             </h2>
             <div class="glass-card" style="padding: 24px;">
+                <!-- 分档图例：所有视图共用同一套档位颜色 -->
+                <div class="matrix-legend">
+                    <span class="legend-item"><span class="legend-dot is-critical"></span>关键断层</span>
+                    <span class="legend-item"><span class="legend-dot is-significant"></span>显著差距</span>
+                    <span class="legend-item"><span class="legend-dot is-watch"></span>关注</span>
+                    <span class="legend-item"><span class="legend-dot is-met"></span>达标</span>
+                    <span class="legend-item"><span class="legend-dot is-unscored"></span>未参评（无数据，内容保留）</span>
+                    <span class="legend-hint">档位按阶段阈值判定，悬停单元格查看依据</span>
+                </div>
                 <div class="matrix-wrapper">
                     <table class="matrix-table" id="matrixTable">
                         <!-- 由 JS 动态渲染 -->
@@ -98,7 +121,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- 速赢行动清单区域 -->
         <section class="quickwins-section">
             <h2 class="section-title">
@@ -109,18 +132,20 @@
                 <!-- 由 JS 动态渲染 -->
             </div>
         </section>
-        
+
         <!-- 页脚 -->
         <footer class="footer" style="text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px;">
-            <p>© 2026 佳贝艾特 会员运营诊断系统 | 数据更新时间: 2026-02-05</p>
+            <p>© 2026 佳贝艾特 会员运营诊断系统 | <span id="footerMeta"></span></p>
         </footer>
-        
+
     </div>
-    
-    <!-- JavaScript 文件 -->
+
+    <!-- JavaScript 文件（注意顺序：数据 → 引擎 → UI） -->
     <script src="js/toast.js"></script>
     <script src="js/data.js"></script>
+    <script src="js/diagnosis.js"></script>
     <script src="js/charts.js"></script>
+    <script src="js/panel.js"></script>
     <script src="js/components.js"></script>
     <script src="js/app.js"></script>
 </body>
